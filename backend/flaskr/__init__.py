@@ -1,3 +1,4 @@
+import json
 import os
 from flask import Flask, request, abort, jsonify
 from flask_sqlalchemy import SQLAlchemy
@@ -9,7 +10,7 @@ from models import setup_db, Question, Category
 QUESTIONS_PER_PAGE = 10
 
 
-def paginated_questions(selection):
+def paginated_questions(request, selection):
     page = request.args.get('page', 1, type=int)
     start = (page - 1) * QUESTIONS_PER_PAGE
     end = page + QUESTIONS_PER_PAGE
@@ -71,17 +72,17 @@ def create_app(test_config=None):
 
     @app.route('/api/questions')
     def get_questions():
-        selection = Question.query.order_by(Question.id).all()
-        current_questions = paginated_questions(selection)
+        selection = Question.query.all()
+        current_questions = paginated_questions(request, selection)
 
         if len(current_questions) == 0:
             abort(404)
-
-        return jsonify({
-            "success": True,
-            "questions": current_questions,
-            "total_question": len(current_questions)
-        })
+        else:
+            return jsonify({
+                "success": True,
+                "questions": current_questions,
+                "total_questions": len(current_questions)
+            })
 
     """
     @TODO:
@@ -139,5 +140,12 @@ def create_app(test_config=None):
     Create error handlers for all expected errors
     including 404 and 422.
     """
+    @app.errorhandler(404)
+    def not_found(error):
+        return jsonify({
+            "success": False,
+            "error": 404,
+            "message": "resource not found",
+        }), 404
 
     return app

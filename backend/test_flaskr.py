@@ -35,20 +35,48 @@ class TriviaTestCase(unittest.TestCase):
     Write at least one test for each test for successful operation and for expected errors.
     """
 
+    #=================================================#
+    #========== TEST CATEGORIES GET REQUEST===========#
+
     def test_get_categories(self):
-        res = self.client.get('/api/categories')
+        res = self.client().get('/api/categories')
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data['success'], True)
         self.assertTrue(data['total_categories'])
 
-    def test_404_not_found_categories(self):
-        res = self.client.get('/api/categories/1')
+    #====== CATEGORIES GET REQUEST ERROR TEST ========#
+
+    def test_sent_invalid_request(self):
+        res = self.client().get('/api/categories/1')
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 404)
         self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'], 'resource not found')
+
+    #========================================================#
+    #=========== TEST QUESTION GET REQUEST ==================#
+
+    def test_get_paginated_questions(self):
+        res = self.client().get('/api/questions')
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertTrue(len(data['questions']))
+        self.assertTrue(data['total_questions'])
+
+    #========== QUESTIONS GET REQUEST ERROR TESTS ============#
+
+    def test_404_sent_request_beyond_valid_page(self):
+        res = self.client().get('/api/questions?page=1000', json={'rating': 1})
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 404)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'], 'resource not found')
 
 
 # Make the tests conveniently executable
