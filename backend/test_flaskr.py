@@ -54,10 +54,10 @@ class TriviaTestCase(unittest.TestCase):
 
         self.assertEqual(res.status_code, 404)
         self.assertEqual(data['success'], False)
-        self.assertEqual(data['message'], 'resource not found')
+        self.assertEqual(data['message'], 'Resource Not Found')
 
     #========================================================#
-    #=========== TEST QUESTION GET REQUEST ==================#
+    #=========== UNITTEST FOR QUESTION'S GET REQUEST ==================#
 
     def test_get_paginated_questions(self):
         res = self.client().get('/api/questions')
@@ -76,7 +76,17 @@ class TriviaTestCase(unittest.TestCase):
 
         self.assertEqual(res.status_code, 404)
         self.assertEqual(data['success'], False)
-        self.assertEqual(data['message'], 'resource not found')
+        self.assertEqual(data['message'], 'Resource Not Found')
+
+    #==========================================================#
+    #=========== UNITTEST FOR QUESTION'S DELETE REQUEST =======#
+
+    def test_delete_question(self):
+        res = self.client().delete('/api/questions/5')
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['success'], True)
 
 
 # Make the tests conveniently executable

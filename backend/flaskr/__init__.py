@@ -10,7 +10,7 @@ from models import setup_db, Question, Category
 QUESTIONS_PER_PAGE = 10
 
 
-def paginated_questions(request, selection):
+def paginated_questions(selection):
     page = request.args.get('page', 1, type=int)
     start = (page - 1) * QUESTIONS_PER_PAGE
     end = page + QUESTIONS_PER_PAGE
@@ -50,7 +50,7 @@ def create_app(test_config=None):
     """
     @app.route('/api/categories')
     def get_categories():
-        categories = Category.query.all()
+        categories = Category.query.order_by(Category.id).all()
         formated_categories = [category.format() for category in categories]
 
         return jsonify({
@@ -72,8 +72,8 @@ def create_app(test_config=None):
 
     @app.route('/api/questions')
     def get_questions():
-        selection = Question.query.all()
-        current_questions = paginated_questions(request, selection)
+        selection = Question.query.order_by(Question.id).all()
+        current_questions = paginated_questions(selection)
 
         if len(current_questions) == 0:
             abort(404)
@@ -91,6 +91,26 @@ def create_app(test_config=None):
     TEST: When you click the trash icon next to a question, the question will be removed.
     This removal will persist in the database and when you refresh the page.
     """
+    @app.route('/api/questions/<int:question_id>', methods=['DELETE'])
+    def delete_question(question_id):
+
+        try:
+            question = Question.query.get(question_id)
+
+            if question is None:
+                abort(400)
+
+            selection = Question.query.order_by(Question.id).all()
+            current_questions = paginated_questions(selection)
+
+            return({
+                "success": True,
+                "deleted_question": question.id,
+                "questions": current_questions,
+                "total_questions": len(current_questions)
+            })
+        except:
+            abort(422)
 
     """
     @TODO:
@@ -145,7 +165,31 @@ def create_app(test_config=None):
         return jsonify({
             "success": False,
             "error": 404,
-            "message": "resource not found",
+            "message": "Resource Not Found",
         }), 404
+
+    @app.errorhandler(422)
+    def unprocessable(error):
+        return jsonify({
+            "success": False,
+            "error": 422,
+            "message": "Unprocessable Entity"
+        }), 422
+
+    @app.errorhandler(405)
+    def method_not_found(error):
+        return jsonify({
+            "success": False,
+            "error": 405,
+            "message": "Method Not Allowed"
+        })
+
+    @app.errorhandler(400)
+    def bad_request(error):
+        return jsonify({
+            "success": False,
+            "error": 400,
+            "message": "Bad Request"
+        })
 
     return app
