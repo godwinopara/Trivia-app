@@ -26,6 +26,13 @@ class TriviaTestCase(unittest.TestCase):
             # create all tables
             self.db.create_all()
 
+        self.new_question = {
+            'question': 'Who discovered penicillin?',
+            'answer': 'Alexander Fleming',
+            'category': 3,
+            'difficulty': 1
+        }
+
     def tearDown(self):
         """Executed after reach test"""
         pass
@@ -36,7 +43,7 @@ class TriviaTestCase(unittest.TestCase):
     """
 
     #=================================================#
-    #========== TEST CATEGORIES GET REQUEST===========#
+    #====== UNITTEST FOR CATEGORY GET REQUEST  ======#
 
     def test_get_categories(self):
         res = self.client().get('/api/categories')
@@ -46,7 +53,8 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data['success'], True)
         self.assertTrue(data['total_categories'])
 
-    #====== CATEGORIES GET REQUEST ERROR TEST ========#
+    #=======================================================#
+    #==== UNITTEST FOR CATEGORY GET REQUEST ERROR ======#
 
     def test_sent_invalid_request(self):
         res = self.client().get('/api/categories/1')
@@ -57,7 +65,7 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data['message'], 'Resource Not Found')
 
     #========================================================#
-    #=========== UNITTEST FOR QUESTION'S GET REQUEST ==================#
+    #========== UNITTEST FOR QUESTION'S GET REQUEST =========#
 
     def test_get_paginated_questions(self):
         res = self.client().get('/api/questions')
@@ -68,7 +76,8 @@ class TriviaTestCase(unittest.TestCase):
         self.assertTrue(len(data['questions']))
         self.assertTrue(data['total_questions'])
 
-    #========== QUESTIONS GET REQUEST ERROR TESTS ============#
+    #===========================================================#
+    #===== UNITTEST FOR QUESTION'S GET REQUEST ERROR TESTS ======#
 
     def test_404_sent_request_beyond_valid_page(self):
         res = self.client().get('/api/questions?page=1000', json={'rating': 1})
@@ -87,6 +96,27 @@ class TriviaTestCase(unittest.TestCase):
 
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data['success'], True)
+        self.assertTrue(data['deleted_question'])
+        self.assertTrue(len(data['questions']))
+        self.assertTrue(data['total_questions'])
+
+    def test_404_if_question_does_not_exist(self):
+        res = self.client().delete('/api/questions/1000')
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 422)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'], 'Unprocessable Entity')
+
+    def test_added_new_question(self):
+        res = self.client().post('/api/questions', json=self.new_question)
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertTrue(data['created'])
+        self.assertTrue(len(data['questions']))
+        self.assertTrue(data['total_questions'])
 
 
 # Make the tests conveniently executable
