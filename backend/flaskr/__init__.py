@@ -1,3 +1,4 @@
+from crypt import methods
 import json
 from nis import cat
 import os
@@ -215,6 +216,43 @@ def create_app(test_config=None):
     one question at a time is displayed, the user is allowed to answer
     and shown whether they were correct or not.
     """
+    @app.route('/quizzes', methods=["POST"])
+    def get_quizzes():
+        """ GET THE QUIZ CATEGORY THE USER SELECTED"""
+        data = request.get_json()
+
+        """THE PREVIOUS QUESTION THE USER HAVE ATTEMPTED """
+        previous_questions = data.get('previous_questions')
+
+        """ THE CATEGORY OF QUESTIONS THE USER SELECTED """
+        quiz_category = data.get('quiz_category')
+
+        """ 
+            FILTER OUT QUESTIONS BASED ON THE CATEGORY
+            THE USER SELECTED
+        """
+        questions_based_on_current_quiz_category = Question.query.filter(
+            Question.category == quiz_category['id'])
+
+        """ 
+            RANDOMLY SELECT A QUESTIONS FROM THE FILTERED QUESTIONS
+            THAT THE USER HAVE NOT ATTEMPTED
+        """
+        current_question = random.choice(
+            [question for question in questions_based_on_current_quiz_category if question.category not in previous_questions])
+
+        random_question = {
+            'id': current_question.id,
+            'question': current_question.question,
+            'answer': current_question.answer,
+            'category': current_question.category,
+            'difficulty': current_question.difficulty
+        }
+
+        return jsonify({
+            'success': True,
+            'question': random_question
+        })
 
     """
     @TODO:
@@ -243,7 +281,7 @@ def create_app(test_config=None):
             "success": False,
             "error": 405,
             "message": "Method Not Allowed"
-        })
+        }), 405
 
     @app.errorhandler(400)
     def bad_request(error):
@@ -251,6 +289,6 @@ def create_app(test_config=None):
             "success": False,
             "error": 400,
             "message": "Bad Request"
-        })
+        }), 400
 
     return app

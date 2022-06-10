@@ -33,6 +33,11 @@ class TriviaTestCase(unittest.TestCase):
             'difficulty': 1
         }
 
+        self.quizzes = {
+            'previous_questions': [1, 4, 20, 15],
+            'quiz_category': 'History'
+        }
+
     def tearDown(self):
         """Executed after reach test"""
         pass
@@ -130,6 +135,20 @@ class TriviaTestCase(unittest.TestCase):
         self.assertTrue(data['questions'])
         self.assertTrue(data['totalQuestions'])
         self.assertTrue(data['currentCategory'])
+
+    #============================================#
+    #======== UNITTEST FOR QUIZ GET REQUEST =====#
+
+    def test_get_quizzes(self):
+        res = self.client().get('/quizzes', json=self.quizzes)
+        data = json.loads(res.data)
+
+        print(data)
+        print(json)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertTrue(data['question'], True)
 
 
 # Make the tests conveniently executable
