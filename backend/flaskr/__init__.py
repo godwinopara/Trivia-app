@@ -1,5 +1,7 @@
 import json
+from nis import cat
 import os
+from unicodedata import category
 from flask import Flask, request, abort, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
@@ -48,15 +50,21 @@ def create_app(test_config=None):
     Create an endpoint to handle GET requests
     for all available categories.
     """
-    @app.route('/api/categories')
+    @app.route('/categories')
     def get_categories():
-        categories = Category.query.order_by(Category.id).all()
-        formated_categories = [category.format() for category in categories]
 
-        return jsonify({
-            "success": True,
-            "total_categories": len(formated_categories)
-        })
+        try:
+            categories = Category.query.order_by(Category.id).all()
+            formated_categories = {}
+            for category in categories:
+                formated_categories[category.id] = category.type
+
+            return jsonify({
+                "success": True,
+                "categories": formated_categories,
+            })
+        except:
+            abort(404)
     """
     @TODO:
     Create an endpoint to handle GET requests for questions,
@@ -70,10 +78,14 @@ def create_app(test_config=None):
     Clicking on the page numbers should update the questions.
     """
 
-    @app.route('/api/questions')
+    @app.route('/questions')
     def get_questions():
-        selection = Question.query.order_by(Question.id).all()
-        current_questions = paginated_questions(selection)
+        questions = Question.query.order_by(Question.id).all()
+        categories = Category.query.order_by(Category.id).all()
+        current_questions = paginated_questions(questions)
+        formated_categories = {}
+        for category in categories:
+            formated_categories[category.id] = category.type
 
         if len(current_questions) == 0:
             abort(404)
@@ -81,8 +93,12 @@ def create_app(test_config=None):
             return jsonify({
                 "success": True,
                 "questions": current_questions,
-                "total_questions": len(current_questions)
+                "totalQuestions": len(current_questions),
+                "categories": formated_categories,
+                "currentCategory": "History"
             })
+
+    # list of questions, number of total questions, current category, categories.
 
     """
     @TODO:
@@ -91,7 +107,7 @@ def create_app(test_config=None):
     TEST: When you click the trash icon next to a question, the question will be removed.
     This removal will persist in the database and when you refresh the page.
     """
-    @app.route('/api/questions/<int:question_id>', methods=['DELETE'])
+    @app.route('/questions/<int:question_id>', methods=['DELETE'])
     def delete_question(question_id):
 
         try:
@@ -107,7 +123,7 @@ def create_app(test_config=None):
                 "success": True,
                 "deleted_question": question.id,
                 "questions": current_questions,
-                "total_questions": len(current_questions)
+                "totalQuestions": len(current_questions)
             })
         except:
             abort(422)
@@ -122,7 +138,7 @@ def create_app(test_config=None):
     the form will clear and the question will appear at the end of the last page
     of the questions list in the "List" tab.
     """
-    @app.route('/api/questions', methods=["POST"])
+    @app.route('/questions', methods=["POST"])
     def create_question():
 
         data = request.get_json()
@@ -131,6 +147,7 @@ def create_app(test_config=None):
         answer = data.get('answer', None)
         category = data.get('category', None)
         difficulty = data.get('difficulty', None)
+        search = data.get('search', '')
 
         try:
             new_question = Question(
@@ -145,7 +162,7 @@ def create_app(test_config=None):
                 "success": True,
                 "created": new_question.id,
                 "questions": formated_questions,
-                "total_questions": len(all_questions)
+                "totalQuestions": len(all_questions)
             })
         except:
             abort(405)
@@ -169,6 +186,23 @@ def create_app(test_config=None):
     categories in the left column will cause only questions of that
     category to be shown.
     """
+    @app.route('/categories/<int:category_id>/questions')
+    def get_questions_by_category(category_id):
+
+        try:
+            category = Category.query.get(category_id)
+            questions = Question.query.filter(Question.category == category.id)
+            format_questions = [question.format() for question in questions]
+
+            return({
+                "success": True,
+                "questions": format_questions,
+                "totalQuestions": len(format_questions),
+                "currentCategory": category.type
+            })
+
+        except:
+            abort(422)
 
     """
     @TODO:
