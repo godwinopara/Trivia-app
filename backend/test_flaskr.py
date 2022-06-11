@@ -48,7 +48,7 @@ class TriviaTestCase(unittest.TestCase):
     """
 
     #=================================================#
-    #====== UNITTEST FOR CATEGORY GET REQUEST  ======#
+    #====== UNITTEST FOR GET REQUEST  ON CATEGORY======#
 
     def test_get_categories(self):
         res = self.client().get('/categories')
@@ -59,7 +59,7 @@ class TriviaTestCase(unittest.TestCase):
         self.assertTrue(data['categories'])
 
     #=======================================================#
-    #==== UNITTEST FOR CATEGORY GET REQUEST ERROR ======#
+    #==== UNITTEST FOR FAILED GET REQUEST ON CATEGORY ======#
 
     def test_sent_invalid_request(self):
         res = self.client().get('/categories/1')
@@ -70,7 +70,7 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data['message'], 'Resource Not Found')
 
     #========================================================#
-    #========== UNITTEST FOR QUESTION'S GET REQUEST =========#
+    #========== UNITTEST FOR GET REQUEST ON QUESTIONS=========#
 
     def test_get_paginated_questions(self):
         res = self.client().get('/questions')
@@ -81,50 +81,8 @@ class TriviaTestCase(unittest.TestCase):
         self.assertTrue(len(data['questions']))
         self.assertTrue(data['totalQuestions'])
 
-    #===========================================================#
-    #===== UNITTEST FOR QUESTION'S GET REQUEST ERROR TESTS ======#
-
-    def test_404_sent_request_beyond_valid_page(self):
-        res = self.client().get('/questions?page=1000', json={'rating': 1})
-        data = json.loads(res.data)
-
-        self.assertEqual(res.status_code, 404)
-        self.assertEqual(data['success'], False)
-        self.assertEqual(data['message'], 'Resource Not Found')
-
-    #==========================================================#
-    #=========== UNITTEST FOR QUESTION'S DELETE REQUEST =======#
-
-    def test_delete_question(self):
-        res = self.client().delete('/questions/5')
-        data = json.loads(res.data)
-
-        self.assertEqual(res.status_code, 200)
-        self.assertEqual(data['success'], True)
-        self.assertTrue(data['deleted_question'])
-        self.assertTrue(len(data['questions']))
-        self.assertTrue(data['totalQuestions'])
-
-    def test_404_if_question_does_not_exist(self):
-        res = self.client().delete('/questions/1000')
-        data = json.loads(res.data)
-
-        self.assertEqual(res.status_code, 422)
-        self.assertEqual(data['success'], False)
-        self.assertEqual(data['message'], 'Unprocessable Entity')
-
-    def test_add_new_question(self):
-        res = self.client().post('/questions', json=self.new_question)
-        data = json.loads(res.data)
-
-        self.assertEqual(res.status_code, 200)
-        self.assertEqual(data['success'], True)
-        self.assertTrue(data['created'])
-        self.assertTrue(len(data['questions']))
-        self.assertTrue(data['totalQuestions'])
-
-    #======================================================#
-    # ======= UNITTEST FOR GET QUESTIONS BY CATEGORY ======#
+    #===============================================================#
+    # ===== UNITTEST FOR GET REQUEST ON QUESTIONS BY CATEGORY ======#
 
     def test_get_questions_by_category(self):
         res = self.client().get('/categories/5/questions')
@@ -136,16 +94,53 @@ class TriviaTestCase(unittest.TestCase):
         self.assertTrue(data['totalQuestions'])
         self.assertTrue(data['currentCategory'])
 
-    #============================================#
-    #======== UNITTEST FOR QUIZ GET REQUEST =====#
+    #===========================================================#
+    #====== UNITTEST FOR FAILED GET REQUEST ON QUESTIONS =======#
 
-    def test_get_quizzes(self):
-        res = self.client().post('/quizzes', json=self.quizzes)
+    def test_404_sent_request_beyond_valid_page(self):
+        res = self.client().get('/questions?page=1000', json={'rating': 1})
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 404)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'], 'Resource Not Found')
+
+    #===========================================================#
+    #======== UNITTEST FOR POST REQUEST ON QUESTION=============#
+
+    def test_add_new_question(self):
+        res = self.client().post('/questions', json={"searchTerm": "title"})
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data['success'], True)
-        self.assertTrue(data['question'], True)
+        self.assertTrue(data['created'])
+        self.assertTrue(len(data['questions']))
+        self.assertTrue(data['totalQuestions'])
+
+    #==========================================================#
+    #=========== UNITTEST FOR DELETE REQUEST ON QUESTION=======#
+
+    def test_delete_question(self):
+        res = self.client().delete('/questions/5')
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertTrue(data['deleted_question'])
+        self.assertTrue(len(data['questions']))
+        self.assertTrue(data['totalQuestions'])
+
+    #=============================================================#
+    #====== UNITTEST FOR FAILED DELETE REQUEST ON QUESTION =======#
+
+    def test_404_if_question_does_not_exist(self):
+        res = self.client().delete('/questions/1000')
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 422)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'], 'Unprocessable Entity')
 
 
 # Make the tests conveniently executable

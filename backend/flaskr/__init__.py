@@ -15,7 +15,7 @@ QUESTIONS_PER_PAGE = 10
 def paginated_questions(selection):
     page = request.args.get('page', 1, type=int)
     start = (page - 1) * QUESTIONS_PER_PAGE
-    end = page + QUESTIONS_PER_PAGE
+    end = start + QUESTIONS_PER_PAGE
 
     questions = [question.format() for question in selection]
     current_questions = questions[start:end]
@@ -80,10 +80,20 @@ def create_app(test_config=None):
 
     @app.route('/questions')
     def get_questions():
+
         questions = Question.query.order_by(Question.id).all()
         categories = Category.query.order_by(Category.id).all()
         current_questions = paginated_questions(questions)
+
+        # format_question = [question.format() for question in questions]
+
+        """ DICTIONARY THAT HOLDS ALL CATEGORIES """
         formated_categories = {}
+
+        """ 
+        RETURN ALL THE CATEGORIES IN DICTIONARY WITH
+        ID AS KEY AND TYPE AS VALUE
+        """
         for category in categories:
             formated_categories[category.id] = category.type
 
@@ -93,9 +103,9 @@ def create_app(test_config=None):
             return jsonify({
                 "success": True,
                 "questions": current_questions,
-                "totalQuestions": len(current_questions),
+                "total_questions": len(questions),
                 "categories": formated_categories,
-                "currentCategory": "History"
+                "current_category": "All Question"
             })
 
     # list of questions, number of total questions, current category, categories.
@@ -119,11 +129,13 @@ def create_app(test_config=None):
             selection = Question.query.order_by(Question.id).all()
             current_questions = paginated_questions(selection)
 
+            question.delete()
+
             return({
                 "success": True,
                 "deleted_question": question.id,
                 "questions": current_questions,
-                "totalQuestions": len(current_questions)
+                "total_questions": len(current_questions)
             })
         except:
             abort(422)
@@ -139,7 +151,7 @@ def create_app(test_config=None):
     of the questions list in the "List" tab.
     """
     @app.route('/questions', methods=["POST"])
-    def create_question():
+    def search_question_or_add_question():
 
         data = request.get_json()
 
@@ -148,8 +160,6 @@ def create_app(test_config=None):
         category = data.get('category', None)
         difficulty = data.get('difficulty', None)
         search = data.get('searchTerm')
-
-        print(search)
 
         try:
             if search:
@@ -168,13 +178,12 @@ def create_app(test_config=None):
                 new_question.insert()
 
                 all_questions = Question.query.order_by(Question.id).all()
-                formated_questions = [question.format()
-                                      for question in all_questions]
+                current_questions = paginated_questions(all_questions)
                 return jsonify({
                     "success": True,
                     "created": new_question.id,
-                    "questions": formated_questions,
-                    "totalQuestions": len(all_questions)
+                    "questions": current_questions,
+                    "total_questions": len(all_questions)
                 })
         except:
             abort(405)
@@ -210,7 +219,7 @@ def create_app(test_config=None):
                 "success": True,
                 "questions": format_questions,
                 "totalQuestions": len(format_questions),
-                "currentCategory": category.type
+                "current_category": category.type
             })
 
         except:

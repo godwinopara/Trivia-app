@@ -73,7 +73,7 @@ You will need to provide detailed documentation of your API endpoints including 
 
 ### Documentation Example
 
-`GET '/api/v1.0/categories'`
+`GET '/categories'`
 
 - Fetches a dictionary of categories in which the keys are the ids and the value is the corresponding string of the category
 - Request Arguments: None
@@ -90,6 +90,10 @@ You will need to provide detailed documentation of your API endpoints including 
 }
 ```
 
+`GET '/questions'`
+
+- Fetches a dict
+
 ## Testing
 
 Write at least one test for the success and at least one error behavior of each endpoint using the unittest library.
@@ -102,3 +106,4 @@ createdb trivia_test
 psql trivia_test < trivia.psql
 python test_flaskr.py
 ```
+
