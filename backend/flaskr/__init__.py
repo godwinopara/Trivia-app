@@ -108,8 +108,6 @@ def create_app(test_config=None):
                 "current_category": "All Question"
             })
 
-    # list of questions, number of total questions, current category, categories.
-
     """
     @TODO:
     Create an endpoint to DELETE question using a question ID.
@@ -160,6 +158,7 @@ def create_app(test_config=None):
         category = data.get('category', None)
         difficulty = data.get('difficulty', None)
         search = data.get('searchTerm')
+        print(data)
 
         try:
             if search:
@@ -187,17 +186,6 @@ def create_app(test_config=None):
                 })
         except:
             abort(405)
-
-    """
-    @TODO:
-    Create a POST endpoint to get questions based on a search term.
-    It should return any questions for whom the search term
-    is a substring of the question.
-
-    TEST: Search by any phrase. The questions list will update to include
-    only question that include that string within their question.
-    Try using the word "title" to start.
-    """
 
     """
     @TODO:
@@ -239,44 +227,44 @@ def create_app(test_config=None):
     @app.route('/quizzes', methods=["POST"])
     def get_quizzes():
 
-        # try:
-        """ GET THE QUIZ CATEGORY THE USER SELECTED """
-        data = request.get_json()
+        try:
+            """ GET THE QUIZ CATEGORY THE USER SELECTED """
+            data = request.get_json()
 
-        """ THE PREVIOUS QUESTION THE USER HAVE ATTEMPTED """
-        previous_questions = data.get('previous_questions')
+            """ THE PREVIOUS QUESTION THE USER HAVE ATTEMPTED """
+            previous_questions = data.get('previous_questions')
 
-        """ THE CATEGORY OF QUESTIONS THE USER SELECTED """
-        quiz_category = data.get('quiz_category')
+            """ THE CATEGORY OF QUESTIONS THE USER SELECTED """
+            quiz_category = data.get('quiz_category')
 
-        """
-                FILTER OUT QUESTIONS BASED ON THE CATEGORY
-                THE USER SELECTED
             """
-        questions_based_on_current_quiz_category = Question.query.filter(
-            Question.category == quiz_category.get('id'))
+                    FILTER OUT QUESTIONS BASED ON THE CATEGORY
+                    THE USER SELECTED
+                """
+            questions_based_on_current_quiz_category = Question.query.filter(
+                Question.category == quiz_category.get('id'))
 
-        """
-                RANDOMLY SELECT A QUESTIONS FROM THE FILTERED QUESTIONS
-                THAT THE USER HAVE NOT ATTEMPTED
             """
-        current_question = random.choice(
-            [question for question in questions_based_on_current_quiz_category if question.category not in previous_questions])
+                    RANDOMLY SELECT A QUESTIONS FROM THE FILTERED QUESTIONS
+                    THAT THE USER HAVE NOT ATTEMPTED
+                """
+            current_question = random.choice(
+                [question for question in questions_based_on_current_quiz_category if question.category not in previous_questions])
 
-        random_question = {
-            'id': current_question.id,
-            'question': current_question.question,
-            'answer': current_question.answer,
-            'category': current_question.category,
-            'difficulty': current_question.difficulty
-        }
+            random_question = {
+                'id': current_question.id,
+                'question': current_question.question,
+                'answer': current_question.answer,
+                'category': current_question.category,
+                'difficulty': current_question.difficulty
+            }
 
-        return jsonify({
-            'success': True,
-            'question': random_question
-        })
-        # except:
-        #     abort(422)
+            return jsonify({
+                'success': True,
+                'question': random_question
+            })
+        except:
+            abort(422)
 
     """
     @TODO:
