@@ -1,6 +1,5 @@
 from crypt import methods
 import json
-from nis import cat
 import os
 from unicodedata import category
 from flask import Flask, request, abort, jsonify
@@ -148,23 +147,35 @@ def create_app(test_config=None):
         answer = data.get('answer', None)
         category = data.get('category', None)
         difficulty = data.get('difficulty', None)
-        search = data.get('search', '')
+        search = data.get('searchTerm')
+
+        print(search)
 
         try:
-            new_question = Question(
-                question=question, answer=answer, category=category, difficulty=difficulty)
+            if search:
+                questions = Question.query.filter(
+                    Question.question.ilike(f'%{search}%'))
+                current_questions = paginated_questions(questions)
 
-            new_question.insert()
+                return jsonify({
+                    "success": True,
+                    "questions": current_questions
+                })
+            else:
+                new_question = Question(
+                    question=question, answer=answer, category=category, difficulty=difficulty)
 
-            all_questions = Question.query.order_by(Question.id).all()
-            formated_questions = [question.format()
-                                  for question in all_questions]
-            return jsonify({
-                "success": True,
-                "created": new_question.id,
-                "questions": formated_questions,
-                "totalQuestions": len(all_questions)
-            })
+                new_question.insert()
+
+                all_questions = Question.query.order_by(Question.id).all()
+                formated_questions = [question.format()
+                                      for question in all_questions]
+                return jsonify({
+                    "success": True,
+                    "created": new_question.id,
+                    "questions": formated_questions,
+                    "totalQuestions": len(all_questions)
+                })
         except:
             abort(405)
 
@@ -218,26 +229,28 @@ def create_app(test_config=None):
     """
     @app.route('/quizzes', methods=["POST"])
     def get_quizzes():
-        """ GET THE QUIZ CATEGORY THE USER SELECTED"""
+
+        # try:
+        """ GET THE QUIZ CATEGORY THE USER SELECTED """
         data = request.get_json()
 
-        """THE PREVIOUS QUESTION THE USER HAVE ATTEMPTED """
+        """ THE PREVIOUS QUESTION THE USER HAVE ATTEMPTED """
         previous_questions = data.get('previous_questions')
 
         """ THE CATEGORY OF QUESTIONS THE USER SELECTED """
         quiz_category = data.get('quiz_category')
 
-        """ 
-            FILTER OUT QUESTIONS BASED ON THE CATEGORY
-            THE USER SELECTED
         """
+                FILTER OUT QUESTIONS BASED ON THE CATEGORY
+                THE USER SELECTED
+            """
         questions_based_on_current_quiz_category = Question.query.filter(
-            Question.category == quiz_category['id'])
+            Question.category == quiz_category.get('id'))
 
-        """ 
-            RANDOMLY SELECT A QUESTIONS FROM THE FILTERED QUESTIONS
-            THAT THE USER HAVE NOT ATTEMPTED
         """
+                RANDOMLY SELECT A QUESTIONS FROM THE FILTERED QUESTIONS
+                THAT THE USER HAVE NOT ATTEMPTED
+            """
         current_question = random.choice(
             [question for question in questions_based_on_current_quiz_category if question.category not in previous_questions])
 
@@ -253,13 +266,15 @@ def create_app(test_config=None):
             'success': True,
             'question': random_question
         })
+        # except:
+        #     abort(422)
 
     """
     @TODO:
     Create error handlers for all expected errors
     including 404 and 422.
     """
-    @app.errorhandler(404)
+    @ app.errorhandler(404)
     def not_found(error):
         return jsonify({
             "success": False,
@@ -267,7 +282,7 @@ def create_app(test_config=None):
             "message": "Resource Not Found",
         }), 404
 
-    @app.errorhandler(422)
+    @ app.errorhandler(422)
     def unprocessable(error):
         return jsonify({
             "success": False,
@@ -275,7 +290,7 @@ def create_app(test_config=None):
             "message": "Unprocessable Entity"
         }), 422
 
-    @app.errorhandler(405)
+    @ app.errorhandler(405)
     def method_not_found(error):
         return jsonify({
             "success": False,
@@ -283,7 +298,7 @@ def create_app(test_config=None):
             "message": "Method Not Allowed"
         }), 405
 
-    @app.errorhandler(400)
+    @ app.errorhandler(400)
     def bad_request(error):
         return jsonify({
             "success": False,

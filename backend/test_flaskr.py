@@ -140,11 +140,8 @@ class TriviaTestCase(unittest.TestCase):
     #======== UNITTEST FOR QUIZ GET REQUEST =====#
 
     def test_get_quizzes(self):
-        res = self.client().get('/quizzes', json=self.quizzes)
+        res = self.client().post('/quizzes', json=self.quizzes)
         data = json.loads(res.data)
-
-        print(data)
-        print(json)
 
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data['success'], True)
