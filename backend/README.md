@@ -516,5 +516,5 @@ python test_flaskr.py
 
 ## Acknowledgements
 
-The awesome team at Udacity and all of the students, soon to be full stack extraordinaires!
+The awesome team at Udacity and ALX and all the students of udacity fullstack nanodegree!
 
